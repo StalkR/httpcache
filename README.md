@@ -1,17 +1,16 @@
 # httpcache
 
-[![Build Status][1]][2]
+[![Build Status][1]][2] [![Go Walker][3]][4]
 
 http RoundTripper providing persistent and volatile cache
 
 `go get github.com/StalkR/httpcache`
 
-Documentation: [godoc.org/github.com/StalkR/httpcache][3].
-
-Bugs, comments, questions: create a [new issue][4] or email [httpcache@stalkr.net][5].
+Bugs, comments, questions: create a [new issue][5] or email [httpcache@stalkr.net][6].
 
 [1]: https://secure.travis-ci.org/StalkR/httpcache.png
 [2]: http://www.travis-ci.org/StalkR/httpcache
-[3]: http://godoc.org/github.com/StalkR/httpcache
-[4]: https://github.com/StalkR/httpcache/issues/new
-[5]: mailto:httpcache@stalkr.net
+[3]: http://gowalker.org/api/v1/badge
+[4]: http://gowalker.org/github.com/StalkR/httpcache
+[5]: https://github.com/StalkR/httpcache/issues/new
+[6]: mailto:httpcache@stalkr.net
