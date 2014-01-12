@@ -1,10 +1,13 @@
 package httpcache
 
 import (
-	"io/ioutil"
+	"encoding/gob"
+	"log"
 	"net/url"
+	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 // A fileCache implements a cache with files saved in Path.
@@ -23,18 +26,42 @@ func (f fileCache) fileName(u *url.URL) string {
 }
 
 // Get gets data saved for an URL if present in cache.
-func (f fileCache) Get(u *url.URL) ([]byte, error) {
-	data, err := ioutil.ReadFile(f.fileName(u))
+func (f fileCache) Get(u *url.URL) (*entry, error) {
+
+	fp, err := os.Open(f.fileName(u))
 	if err != nil {
+		log.Println("Could not open ", u)
 		return nil, err
 	}
-	return data, nil
+	decoder := gob.NewDecoder(fp)
+	defer fp.Close()
+
+	var e entry
+	err = decoder.Decode(&e)
+	if err != nil {
+		log.Printf("Could not decode %s: %s\n", u, err)
+		return nil, err
+	}
+	log.Printf("Returning %d bytes from cache", len(e.Data))
+	return &e, nil
 }
 
 // Put puts data of an URL in cache.
 func (f fileCache) Put(u *url.URL, data []byte) error {
-	err := ioutil.WriteFile(f.fileName(u), data, 0644)
+
+	log.Printf("Putting %s in cache (%d bytes)\n", *u, len(data))
+	ent := entry{data, time.Now()}
+	fp, err := os.Create(f.fileName(u))
 	if err != nil {
+
+		return err
+	}
+	defer fp.Close()
+
+	encoder := gob.NewEncoder(fp)
+	err = encoder.Encode(ent)
+	if err != nil {
+		log.Println("Could not write to cache: ", err)
 		return err
 	}
 	return nil
