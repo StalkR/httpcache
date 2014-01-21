@@ -3,12 +3,12 @@ package httpcache
 import (
 	"bytes"
 	"errors"
-
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
 	"sync"
 	"time"
 )
@@ -36,6 +36,7 @@ type CachedRoundTrip struct {
 func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
 	//c.m.Lock()
 	//defer c.m.Unlock()
+
 	if !c.cacheableRequest(req) {
 		return c.Transport.RoundTrip(req)
 	}
