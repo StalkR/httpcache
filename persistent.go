@@ -12,21 +12,17 @@ import (
 func NewPersistent(transport http.RoundTripper, path string, TTL time.Duration) http.RoundTripper {
 	return &CachedRoundTrip{
 		Transport: transport,
-		Cache:     fileCache{Path: path},
+		Cache:     &fileCache{Path: path},
 		TTL:       TTL,
 	}
 }
 
 // NewPersistentClient creates an http client with a file cache.
-func NewPersistentClient(path string, TTL time.Duration) *http.Client {
-
+func NewPersistentClient(path string, TTL time.Duration) (*http.Client, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
-		if err != nil {
-			fmt.Printf("Could not create %s: %s", path, err)
-			return nil
+		if err := os.Mkdir(path, os.ModeDir|os.ModePerm); err != nil {
+			return nil, fmt.Errorf("httpcache: could not create dir %s: %v", path, err)
 		}
 	}
-
-	return &http.Client{Transport: NewPersistent(http.DefaultTransport, path, TTL)}
+	return &http.Client{Transport: NewPersistent(http.DefaultTransport, path, TTL)}, nil
 }

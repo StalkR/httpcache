@@ -17,6 +17,7 @@ type Cache interface {
 	Put(u *url.URL, data []byte) error
 }
 
+// An entry represents an entry in the cache and when it was saved.
 type entry struct {
 	Data     []byte
 	SaveTime time.Time
@@ -32,7 +33,6 @@ type CachedRoundTrip struct {
 
 // RoundTrip loads from cache if possible or RoundTrips and saves it.
 func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
-
 	if !c.cacheableRequest(req) {
 		return c.Transport.RoundTrip(req)
 	}
@@ -65,22 +65,22 @@ func (c CachedRoundTrip) cacheableResponse(resp *http.Response) bool {
 // load prepares the response of a request by loading its body from cache.
 func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Response, error) {
 	if maxRedirects == 0 {
-		return nil, errors.New("httpcache: Load: max redirects hit")
+		return nil, errors.New("httpcache: max redirects hit")
 	}
 
 	entry, err := c.Cache.Get(req.URL)
-	if err != nil || entry == nil {
-
+	if err != nil {
 		return nil, err
 	}
+	if entry == nil {
+		return nil, errors.New("httpcache: underlying cache returned nil entry")
+	}
 
-	// entry expired!
 	if entry.SaveTime.Add(c.TTL).Before(time.Now()) {
 		return nil, errors.New("httpcache: TTL expired")
 	}
 
 	body := entry.Data
-
 	if strings.HasPrefix(string(body), "REDIRECT:") {
 		u, err := url.Parse(strings.TrimPrefix(string(body), "REDIRECT:"))
 		if err != nil {
