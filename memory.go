@@ -2,7 +2,6 @@ package httpcache
 
 import (
 	"errors"
-	//"fmt"
 	"github.com/golang/groupcache/lru"
 	"net/url"
 	"sync"
@@ -16,8 +15,7 @@ type memoryCache struct {
 	mutex *sync.Mutex
 }
 
-func NewMemoryCache(maxItems int) *memoryCache {
-
+func newMemoryCache(maxItems int) *memoryCache {
 	return &memoryCache{
 		Cache: lru.New(maxItems),
 		mutex: &sync.Mutex{},
@@ -26,7 +24,6 @@ func NewMemoryCache(maxItems int) *memoryCache {
 
 // Get gets data saved for an URL if present in cache.
 func (m memoryCache) Get(u *url.URL) (*entry, error) {
-
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 

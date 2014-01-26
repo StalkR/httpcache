@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
-
 	"sync"
 	"time"
 )
@@ -34,8 +32,6 @@ type CachedRoundTrip struct {
 
 // RoundTrip loads from cache if possible or RoundTrips and saves it.
 func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
-	//c.m.Lock()
-	//defer c.m.Unlock()
 
 	if !c.cacheableRequest(req) {
 		return c.Transport.RoundTrip(req)
@@ -44,7 +40,7 @@ func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err == nil {
 		return cache, nil
 	}
-	log.Println("Error while fetching from cache: ", err)
+
 	resp, err := c.Transport.RoundTrip(req)
 	if err != nil {
 		return nil, err
@@ -71,14 +67,16 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 	if maxRedirects == 0 {
 		return nil, errors.New("httpcache: Load: max redirects hit")
 	}
+
 	entry, err := c.Cache.Get(req.URL)
 	if err != nil || entry == nil {
+
 		return nil, err
 	}
 
-	//entry expired!
+	// entry expired!
 	if entry.SaveTime.Add(c.TTL).Before(time.Now()) {
-		return nil, errors.New("Cache TTL Expired!")
+		return nil, errors.New("httpcache: TTL expired")
 	}
 
 	body := entry.Data
@@ -110,6 +108,7 @@ func (c *CachedRoundTrip) save(req *http.Request, resp *http.Response) error {
 		if err != nil {
 			return err
 		}
+
 		err = c.Cache.Put(req.URL, []byte("REDIRECT:"+u.String()))
 		if err != nil {
 			return err

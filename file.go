@@ -42,14 +42,13 @@ func (f fileCache) Get(u *url.URL) (*entry, error) {
 		log.Printf("Could not decode %s: %s\n", u, err)
 		return nil, err
 	}
-	log.Printf("Returning %d bytes from cache", len(e.Data))
+
 	return &e, nil
 }
 
 // Put puts data of an URL in cache.
 func (f fileCache) Put(u *url.URL, data []byte) error {
 
-	log.Printf("Putting %s in cache (%d bytes)\n", *u, len(data))
 	ent := entry{data, time.Now()}
 	fp, err := os.Create(f.fileName(u))
 	if err != nil {

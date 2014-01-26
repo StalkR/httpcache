@@ -9,7 +9,7 @@ import (
 func NewVolatile(transport http.RoundTripper, TTL time.Duration, maxItems int) http.RoundTripper {
 	return &CachedRoundTrip{
 		Transport: transport,
-		Cache:     NewMemoryCache(maxItems),
+		Cache:     newMemoryCache(maxItems),
 		TTL:       TTL,
 	}
 }
