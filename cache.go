@@ -11,6 +11,29 @@ import (
 	"time"
 )
 
+// Reporter is an interface that allows reporting of cache performance,
+// e.g. send events to a logger or statsd, etc.
+// The handlers accept the request as is, so they can report for instance, hits/misses per domain
+type Reporter interface {
+	OnCacheHit(*http.Request)
+	OnCacheMiss(*http.Request)
+	OnUncachable(*http.Request)
+}
+
+// the default reporter does nothing
+type NopReporter struct{}
+
+func (*NopReporter) OnCacheHit(*http.Request)   {}
+func (*NopReporter) OnCacheMiss(*http.Request)  {}
+func (*NopReporter) OnUncachable(*http.Request) {}
+
+var currentReporter Reporter = &NopReporter{}
+
+// Set the stats reporter of the cache
+func SetReporter(r Reporter) {
+	currentReporter = r
+}
+
 // Cache represents the ability to cache response data from URL.
 type Cache interface {
 	Get(u *url.URL) (*entry, error)
@@ -34,12 +57,17 @@ type CachedRoundTrip struct {
 func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	if !c.cacheableRequest(req) {
+		//notify the reporter
+		currentReporter.OnUncachable(req)
+
 		return c.Transport.RoundTrip(req)
 	}
 	cache, err := c.load(req, 20)
 	if err == nil {
+		currentReporter.OnCacheHit(req)
 		return cache, nil
 	}
+	currentReporter.OnCacheMiss(req)
 
 	resp, err := c.Transport.RoundTrip(req)
 	if err != nil {
