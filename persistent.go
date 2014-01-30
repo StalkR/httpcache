@@ -4,21 +4,20 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 )
 
 // NewPersistent creates an http RoundTripper with a file cache.
 // Cache files will be created under path.
-func NewPersistent(transport http.RoundTripper, path string, TTL time.Duration) http.RoundTripper {
+func NewPersistent(transport http.RoundTripper, path string, policy CachePolicyProvider) http.RoundTripper {
 	return &CachedRoundTrip{
 		Transport: transport,
 		Cache:     fileCache{Path: path},
-		TTL:       TTL,
+		Policy:    policy,
 	}
 }
 
 // NewPersistentClient creates an http client with a file cache.
-func NewPersistentClient(path string, TTL time.Duration) *http.Client {
+func NewPersistentClient(path string, policy CachePolicyProvider) *http.Client {
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.Mkdir(path, os.ModeDir|os.ModePerm)
@@ -28,5 +27,5 @@ func NewPersistentClient(path string, TTL time.Duration) *http.Client {
 		}
 	}
 
-	return &http.Client{Transport: NewPersistent(http.DefaultTransport, path, TTL)}
+	return &http.Client{Transport: NewPersistent(http.DefaultTransport, path, policy)}
 }

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/StalkR/httpcache"
+	"github.com/EverythingMe/httpcache"
 )
 
 var cache = flag.String("cache", "", "directory to use as cache")
@@ -21,7 +21,7 @@ func main() {
 	}
 	url := flag.Arg(0)
 
-	client := httpcache.NewPersistentClient(*cache)
+	client := httpcache.NewPersistentClient(*cache, httpcache.NeverExpirePolicy{})
 	resp, err := client.Get(url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v", err)

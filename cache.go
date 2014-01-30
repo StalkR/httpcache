@@ -37,12 +37,13 @@ func SetReporter(r Reporter) {
 // Cache represents the ability to cache response data from URL.
 type Cache interface {
 	Get(u *url.URL) (*entry, error)
-	Put(u *url.URL, data []byte) error
+	Put(u *url.URL, e *entry) error
 }
 
 type entry struct {
 	Data     []byte
 	SaveTime time.Time
+	TTL      time.Duration
 }
 
 // A CachedRoundTrip implements net/http RoundTripper with a cache.
@@ -50,7 +51,7 @@ type CachedRoundTrip struct {
 	m         sync.Mutex
 	Transport http.RoundTripper
 	Cache     Cache
-	TTL       time.Duration
+	Policy    CachePolicyProvider
 }
 
 // RoundTrip loads from cache if possible or RoundTrips and saves it.
@@ -103,7 +104,7 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 	}
 
 	// entry expired!
-	if entry.SaveTime.Add(c.TTL).Before(time.Now()) {
+	if entry.TTL >= 0 && entry.SaveTime.Add(entry.TTL).Before(time.Now()) {
 		return nil, errors.New("httpcache: TTL expired")
 	}
 
@@ -129,6 +130,15 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 	}, nil
 }
 
+// Generate a new cache entry for a given request, calling the policy provider for TTL
+func (c *CachedRoundTrip) newEntry(data []byte, resp *http.Response) *entry {
+	return &entry{
+		data,
+		time.Now(),
+		c.Policy.GetTTL(resp),
+	}
+}
+
 // save saves the body of a response corresponding to a request.
 func (c *CachedRoundTrip) save(req *http.Request, resp *http.Response) error {
 	if resp.StatusCode == http.StatusMovedPermanently {
@@ -137,7 +147,7 @@ func (c *CachedRoundTrip) save(req *http.Request, resp *http.Response) error {
 			return err
 		}
 
-		err = c.Cache.Put(req.URL, []byte("REDIRECT:"+u.String()))
+		err = c.Cache.Put(req.URL, c.newEntry([]byte("REDIRECT:"+u.String()), resp))
 		if err != nil {
 			return err
 		}
@@ -149,7 +159,7 @@ func (c *CachedRoundTrip) save(req *http.Request, resp *http.Response) error {
 		return err
 	}
 	resp.Body.Close()
-	err = c.Cache.Put(req.URL, body)
+	err = c.Cache.Put(req.URL, c.newEntry(body, resp))
 	if err != nil {
 		return err
 	}

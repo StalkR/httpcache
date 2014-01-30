@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 )
 
 // A fileCache implements a cache with files saved in Path.
@@ -47,9 +46,8 @@ func (f fileCache) Get(u *url.URL) (*entry, error) {
 }
 
 // Put puts data of an URL in cache.
-func (f fileCache) Put(u *url.URL, data []byte) error {
+func (f fileCache) Put(u *url.URL, e *entry) error {
 
-	ent := entry{data, time.Now()}
 	fp, err := os.Create(f.fileName(u))
 	if err != nil {
 
@@ -58,7 +56,7 @@ func (f fileCache) Put(u *url.URL, data []byte) error {
 	defer fp.Close()
 
 	encoder := gob.NewEncoder(fp)
-	err = encoder.Encode(ent)
+	err = encoder.Encode(*e)
 	if err != nil {
 		log.Println("Could not write to cache: ", err)
 		return err

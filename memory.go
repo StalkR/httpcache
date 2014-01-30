@@ -5,7 +5,6 @@ import (
 	"github.com/golang/groupcache/lru"
 	"net/url"
 	"sync"
-	"time"
 )
 
 // A memoryCache implements a cache with files saved in Path.
@@ -36,9 +35,9 @@ func (m memoryCache) Get(u *url.URL) (*entry, error) {
 }
 
 // Put puts data of an URL in cache.
-func (m memoryCache) Put(u *url.URL, data []byte) error {
+func (m memoryCache) Put(u *url.URL, e *entry) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	m.Cache.Add(u.String(), &entry{data, time.Now()})
+	m.Cache.Add(u.String(), e)
 	return nil
 }

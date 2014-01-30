@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/StalkR/httpcache"
+	"github.com/EverythingMe/httpcache"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := httpcache.NewVolatileClient()
+	client := httpcache.NewVolatileClient(httpcache.NeverExpirePolicy{}, 1000)
 	for _, url := range flag.Args() {
 		resp, err := client.Get(url)
 		if err != nil {
