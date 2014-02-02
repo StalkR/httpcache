@@ -127,6 +127,7 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 		ProtoMinor:    0,
 		Body:          ioutil.NopCloser(bytes.NewReader(body)),
 		ContentLength: int64(len(body)),
+		Request:       req,
 	}, nil
 }
 
