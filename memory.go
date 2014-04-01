@@ -2,7 +2,7 @@ package httpcache
 
 import (
 	"errors"
-	"github.com/golang/groupcache/lru"
+	"github.com/EverythingMe/groupcache/lru"
 	"net/url"
 	"sync"
 )
@@ -22,7 +22,7 @@ func newMemoryCache(maxItems int) *memoryCache {
 }
 
 // Get gets data saved for an URL if present in cache.
-func (m memoryCache) Get(u *url.URL) (*entry, error) {
+func (m memoryCache) Get(u *url.URL) (*Entry, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -31,11 +31,11 @@ func (m memoryCache) Get(u *url.URL) (*entry, error) {
 		return nil, errors.New("not in cache")
 	}
 
-	return data.(*entry), nil
+	return data.(*Entry), nil
 }
 
 // Put puts data of an URL in cache.
-func (m memoryCache) Put(u *url.URL, e *entry) error {
+func (m memoryCache) Put(u *url.URL, e *Entry) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.Cache.Add(u.String(), e)

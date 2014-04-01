@@ -25,7 +25,7 @@ func (f fileCache) fileName(u *url.URL) string {
 }
 
 // Get gets data saved for an URL if present in cache.
-func (f fileCache) Get(u *url.URL) (*entry, error) {
+func (f fileCache) Get(u *url.URL) (*Entry, error) {
 
 	fp, err := os.Open(f.fileName(u))
 	if err != nil {
@@ -35,7 +35,7 @@ func (f fileCache) Get(u *url.URL) (*entry, error) {
 	decoder := gob.NewDecoder(fp)
 	defer fp.Close()
 
-	var e entry
+	var e Entry
 	err = decoder.Decode(&e)
 	if err != nil {
 		log.Printf("Could not decode %s: %s\n", u, err)
@@ -46,7 +46,7 @@ func (f fileCache) Get(u *url.URL) (*entry, error) {
 }
 
 // Put puts data of an URL in cache.
-func (f fileCache) Put(u *url.URL, e *entry) error {
+func (f fileCache) Put(u *url.URL, e *Entry) error {
 
 	fp, err := os.Create(f.fileName(u))
 	if err != nil {

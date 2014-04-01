@@ -36,11 +36,11 @@ func SetReporter(r Reporter) {
 
 // Cache represents the ability to cache response data from URL.
 type Cache interface {
-	Get(u *url.URL) (*entry, error)
-	Put(u *url.URL, e *entry) error
+	Get(u *url.URL) (*Entry, error)
+	Put(u *url.URL, e *Entry) error
 }
 
-type entry struct {
+type Entry struct {
 	Data     []byte
 	SaveTime time.Time
 	TTL      time.Duration
@@ -97,18 +97,18 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 		return nil, errors.New("httpcache: Load: max redirects hit")
 	}
 
-	entry, err := c.Cache.Get(req.URL)
-	if err != nil || entry == nil {
+	Entry, err := c.Cache.Get(req.URL)
+	if err != nil || Entry == nil {
 
 		return nil, err
 	}
 
-	// entry expired!
-	if entry.TTL >= 0 && entry.SaveTime.Add(entry.TTL).Before(time.Now()) {
+	// Entry expired!
+	if Entry.TTL >= 0 && Entry.SaveTime.Add(Entry.TTL).Before(time.Now()) {
 		return nil, errors.New("httpcache: TTL expired")
 	}
 
-	body := entry.Data
+	body := Entry.Data
 
 	if strings.HasPrefix(string(body), "REDIRECT:") {
 		u, err := url.Parse(strings.TrimPrefix(string(body), "REDIRECT:"))
@@ -131,9 +131,9 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 	}, nil
 }
 
-// Generate a new cache entry for a given request, calling the policy provider for TTL
-func (c *CachedRoundTrip) newEntry(data []byte, resp *http.Response) *entry {
-	return &entry{
+// Generate a new cache Entry for a given request, calling the policy provider for TTL
+func (c *CachedRoundTrip) newEntry(data []byte, resp *http.Response) *Entry {
+	return &Entry{
 		data,
 		time.Now(),
 		c.Policy.GetTTL(resp),

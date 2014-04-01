@@ -1,6 +1,7 @@
 package httpcache
 
 import (
+	//	"fmt"
 	"net/http"
 	"time"
 )
@@ -73,7 +74,8 @@ func (p *PerDomainTTLPolicy) GetTTL(resp *http.Response) time.Duration {
 	domain := resp.Request.URL.Host
 	ret, found := p.domains[domain]
 	if !found {
-		return p.defaultTTL
+		ret = p.defaultTTL
 	}
+
 	return ret
 }
