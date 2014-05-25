@@ -142,7 +142,7 @@ func (c *CachedRoundTrip) newEntry(data []byte, resp *http.Response) *Entry {
 
 // save saves the body of a response corresponding to a request.
 func (c *CachedRoundTrip) save(req *http.Request, resp *http.Response) error {
-	if resp.StatusCode == http.StatusMovedPermanently {
+	if resp.StatusCode == http.StatusMovedPermanently || resp.StatusCode == http.StatusTemporaryRedirect {
 		u, err := resp.Location()
 		if err != nil {
 			return err
