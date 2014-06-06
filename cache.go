@@ -42,9 +42,12 @@ type Cache interface {
 
 type Entry struct {
 	Data     []byte
+	Header   http.Header
 	SaveTime time.Time
 	TTL      time.Duration
 }
+
+var cachedHeaders = []string{"Content-Type"}
 
 // A CachedRoundTrip implements net/http RoundTripper with a cache.
 type CachedRoundTrip struct {
@@ -128,15 +131,25 @@ func (c CachedRoundTrip) load(req *http.Request, maxRedirects int) (*http.Respon
 		Body:          ioutil.NopCloser(bytes.NewReader(body)),
 		ContentLength: int64(len(body)),
 		Request:       req,
+		Header:        Entry.Header,
 	}, nil
 }
 
 // Generate a new cache Entry for a given request, calling the policy provider for TTL
 func (c *CachedRoundTrip) newEntry(data []byte, resp *http.Response) *Entry {
+	var header = http.Header{}
+	for _, k := range cachedHeaders {
+		h := resp.Header.Get(k)
+		if h != "" {
+			header.Add(k, h)
+		}
+	}
+
 	return &Entry{
-		data,
-		time.Now(),
-		c.Policy.GetTTL(resp),
+		Data:     data,
+		Header:   header,
+		SaveTime: time.Now(),
+		TTL:      c.Policy.GetTTL(resp),
 	}
 }
 
