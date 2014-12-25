@@ -1,8 +1,5 @@
 language: go
 
-go:
-  - 1.1
-
 install:
   - rm -rf examples
   - go get github.com/golang/groupcache/lru
