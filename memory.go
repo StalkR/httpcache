@@ -11,8 +11,8 @@ import (
 
 // A memoryCache implements a cache with files saved in Path.
 type memoryCache struct {
+	sync.Mutex
 	Cache *lru.Cache
-	mutex sync.Mutex
 }
 
 // newMemoryCache creates a new memory cache using groupcache's lru.
@@ -22,8 +22,8 @@ func newMemoryCache(maxItems int) *memoryCache {
 
 // Get gets data saved for an URL if present in cache.
 func (m *memoryCache) Get(u *url.URL) (*entry, error) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.Lock()
+	defer m.Unlock()
 	data, ok := m.Cache.Get(u.String())
 	if !ok {
 		return nil, fmt.Errorf("httpcache: %s not in cache", u)
@@ -33,8 +33,8 @@ func (m *memoryCache) Get(u *url.URL) (*entry, error) {
 
 // Put puts data of an URL in cache.
 func (m *memoryCache) Put(u *url.URL, data []byte) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.Lock()
+	defer m.Unlock()
 	m.Cache.Add(u.String(), &entry{data, time.Now()})
 	return nil
 }

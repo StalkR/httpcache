@@ -29,7 +29,7 @@ func (f *fileCache) fileName(u *url.URL) string {
 func (f *fileCache) Get(u *url.URL) (*entry, error) {
 	fp, err := os.Open(f.fileName(u))
 	if err != nil {
-		return nil, fmt.Errorf("httpcache: could not open %u: %v", u, err)
+		return nil, fmt.Errorf("httpcache: could not open %v: %v", u, err)
 	}
 	decoder := gob.NewDecoder(fp)
 	defer fp.Close()

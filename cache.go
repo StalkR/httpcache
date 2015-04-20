@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -25,7 +24,6 @@ type entry struct {
 
 // A CachedRoundTrip implements net/http RoundTripper with a cache.
 type CachedRoundTrip struct {
-	m         sync.Mutex
 	Transport http.RoundTripper
 	Cache     Cache
 	TTL       time.Duration
