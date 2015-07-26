@@ -57,6 +57,16 @@ type CachedRoundTrip struct {
 	Policy    CachePolicyProvider
 }
 
+type requestCanceler interface {
+	CancelRequest(req *http.Request)
+}
+
+func (c *CachedRoundTrip) CancelRequest(req *http.Request) {
+	if rc, ok := c.Transport.(requestCanceler); ok {
+		rc.CancelRequest(req)
+	}
+}
+
 // RoundTrip loads from cache if possible or RoundTrips and saves it.
 func (c *CachedRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) {
 
