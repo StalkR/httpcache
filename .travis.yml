@@ -2,4 +2,4 @@ language: go
 
 install:
   - rm -rf examples
-  - go get github.com/golang/groupcache/lru
+  - go get -t ./...
