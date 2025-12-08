@@ -1,5 +1,5 @@
 module github.com/StalkR/httpcache
 
-go 1.12
+go 1.20
 
-require github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
+require github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
