@@ -1,8 +1,10 @@
 package httpcache
 
 import (
+	"bufio"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path"
@@ -31,28 +33,47 @@ func (f *fileCache) Get(u *url.URL) (*entry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("httpcache: could not open %v: %v", u, err)
 	}
-	decoder := gob.NewDecoder(fp)
 	defer fp.Close()
 
+	// format before 2025-12-08: encoding/gob
 	var e entry
-	if err := decoder.Decode(&e); err != nil {
-		return nil, fmt.Errorf("httpcache: could not decode %s: %v", u, err)
+	if err := gob.NewDecoder(fp).Decode(&e); err == nil {
+		return &e, nil
 	}
-	return &e, nil
+	if _, err := fp.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	// simpler format with no binary: first line is date, rest is data
+	reader := bufio.NewReader(fp)
+	firstLine, err := reader.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("httpcache: could not read first line: %v", err)
+	}
+	saveTime, err := time.Parse(time.RFC3339, firstLine[:len(firstLine)-1])
+	if err != nil {
+		return nil, fmt.Errorf("httpcache: error parsing first line (date): %v", err)
+	}
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return &entry{data, saveTime}, nil
 }
 
 // Put puts data of an URL in cache.
 func (f *fileCache) Put(u *url.URL, data []byte) error {
-	e := entry{data, time.Now()}
 	fp, err := os.Create(f.fileName(u))
 	if err != nil {
 		return err
 	}
 	defer fp.Close()
 
-	encoder := gob.NewEncoder(fp)
-	if err := encoder.Encode(e); err != nil {
-		return fmt.Errorf("httpcache: could not encode %s: %v", u, err)
+	if _, err := fmt.Fprintln(fp, time.Now().Format(time.RFC3339)); err != nil {
+		return err
+	}
+	if _, err := fp.Write(data); err != nil {
+		return err
 	}
 	return nil
 }
